@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1er Parcial (Simulador de robot planar de 2GDL)</title>
+<style>
+/* Aquí defino el estilo general del cuerpo de la página, usando un fondo oscuro degradado y texto claro 
+    para una presnetnación más profesional*/
+body {
+  font-family: "Segoe UI", Arial, sans-serif; /* Esto es la fuente */
+  background: radial-gradient(circle at center, #2c2f33, #1e2124); /* Fondo */
+  color: #e4e4e4; /* Color de texto claro para contrastar */
+  margin: 0; /* Quito los margenes el navegador para que no estorben al acomodo */
+  padding: 20px; /* Agrego un espacio ineterno para que no se vean muy a la orilla el contenido */
+  overflow-x: hidden; /* Para que no se pueda desplazar horizontalmente la página por error de acomodo */
+}
+
+/* Esto es para el formato del título de la página */
+h1 {
+  text-align: center; /* Texto centrado */
+  color: #ffffff; 
+  margin-bottom: 25px; /* Esto para separar el título del resto del contenido */
+  font-weight: 700; /* Letra más gruesa */
+  text-shadow: 1px 1px 3px rgba(255,255,255,0.15); /* Un brillo para que destaque */
+}
+
+/* Aquí lo que hago es controlar el espacio o distribución de la página */
+.layout {
+  display: flex; /* Modo flexible para que no se sobreponga nada */
+  justify-content: space-evenly; /* Con esto distribuyo los elementos uniformente */
+  align-items: flex-start; /* Alinea desde la parte superior */
+  gap: 15px; /* Para el espacio entre objetos o gráficas */
+}
+
+/* Esto es el estilo de los paneles que tienen todo, el plano cartesiano con el robot y las gráficas */
+.panel {
+  background: #2b2d31; /* Un fondo gris oscuro */
+  border-radius: 14px; /* Bordes redondeados */
+  padding: 20px; /* El espaciado interno */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5); /* Y un poco de sombra para dar profundidad */
+}
+
+/* Agrupa los textos y botones del panel principal */
+.controls {
+  display: flex;
+  flex-direction: column; /* Esto par tener forma de columna, es ecir uno debajo del otro */
+  align-items: center;
+  gap: 10px;
+}
+
+/* Aquí se lee da estilo a los textos dentro de inputs */
+label {
+  font-weight: 600; /* Un poco más grueso */
+  font-size: 14px;
+  color: #f1f1f1; /* Texto claro */
+}
+
+/* Aquí defino cómo se van a ver las cajas de texto donde se pone X y Y */
+input {
+  width: 80px; /* Su tamaño */
+  padding: 6px;
+  border: 1px solid #555;
+  border-radius: 6px;
+  background: #1e1f23; /* Fondo oscuro */
+  color: #eee; /* Coor de texto claro */
+  text-align: center; /* Para que la cantidad se centre dentro de la celda */
+}
+
+/* Aquí es para darle un estilo a los inputs para mopdificar coordenadas */
+input:focus {
+  border-color: #956e2c; /* Con un borde naranja */
+  box-shadow: 0 0 6px rgba(245,158,11,0.6); /* Y brillo alrededor */
+  outline: none; /* Esto pare quitar el borde azul por defecto */
+}
+
+/* Aquí se le da un estilo más general a los botones para ajustar posición o regresar a la por defecto */
+button {
+  width: 150px;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer; /* Aquí cambia el cursor si se pasa por encima */
+  color: white; /* Color del texto */
+  font-weight: bold; /* Testo en negritas */
+  transition: transform 0.2s ease, box-shadow 0.2s ease; /* Esto es para darle una animación suave */
+}
+
+/* Y aquí es par darle un color diferente a cada uno de los botones */
+.move {
+  background: linear-gradient(90deg, #5e5e55, #9d6843);
+}
+.home {
+  background: linear-gradient(90deg, #54544f, #3a486b);
+}
+
+/* Aquí son efectos al momento de poner el cursor en el botón, es más estética */
+button:hover {
+  transform: scale(1.05); /* Para que crezca un poco */
+  box-shadow: 0 0 10px rgba(255,255,255,0.2); /* Y para que brille al ser seleccionado */
+}
+
+/* Aquí defino un estilo para el canvas del plñano cartesiano, solo el diseño su funcionalidad es más adelante */
+canvas {
+  background: #1a1c1f; /* Un fondo oscuro */
+  border-radius: 10px; /* Con bordes redondeados */
+  border: 1px solid #444; /* Borde sutil */
+}
+
+/* Aquí doy diseño al espacio donde se podrán ver los parámetros actuales que tiene el robot */
+.info {
+  margin-top: 1px; /* Para que no esté pegado a otras cosas */
+  font-family: monospace;
+  background: rgba(255,255,255,0.08); /* Fondo translúcido */
+  padding: 8px 12px; /* Para que se vea más centrado el contenido*/ 
+  border-radius: 6px;
+  text-align: center;
+  color: #e4e4e4; /* Color de la letra */
+  font-weight: 800; /* Para resaltar con negritas */  
+}
+
+/* Esto es para dalre estilo a el texto de los parametros del robot */
+.specs {
+  margin-top: 5px;
+  font-size: 13px;
+  color: #aaa;
+  text-align: center;
+  font-family: monospace;
+}
+
+/* Y finalemente de esta parte, el pie de página con miinformación */
+footer {
+  text-align: center;
+  margin-top: 40px;
+  padding: 15px 0;
+  background: rgba(0, 0, 0, 0.25); /* El fondo */
+  color: #f3f3f3;
+  font-size: 14px; /* Tamaño de la letra */
+  letter-spacing: 0.5px; /* Espaciado entre letras */
+  border-top: 1px solid rgba(255, 255, 255, 0.2); /* Para que se pueda distinguir del resto de la página*/
+  border-radius: 0 0 16px 16px;
+  font-family: "Segoe UI", Arial, sans-serif;
+  box-shadow: inset 0 4px 8px rgba(0,0,0,0.15); /* Igual que arriba, para poder distingui */
+}
+
+/* Cambia el color de mi nombre, el del maestro y la materia en el footer para resaltarlo */
+footer strong {
+  color: #fca037;
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<!-- Este es el título principal de la página del simulador -->
+<h1>1er Parcial (Simulador de robot planar de 2GDL)</h1>
+
+<!-- Aquí está la esstructura principal donde se organizan las tres secciones 
+    (dos gráficas a los costados y el robot al centro) -->
+    <div class="layout">
+
+    <!-- Primero empezando de derecha a izquierda, el panel izquierdo, es decir 
+        la gráfica de q₁(t) -->
+        <div class="panel" style="width: 400px; height: 420px;">
+      <!-- Aquí se dibuja la gráfica de q₁(t) con ayuda de la librería Plotly.js -->
+            <div id="grafica_q1" style="width:100%; height:100%;"></div>
+        </div>
+
+    <!-- Después está el panel central con los controles y el plano cartesiano -->
+    <div class="panel">
+        <div class="controls">
+
+        <!-- Contenedor para los las casillas donde se puede poner X y Y deseadas -->
+        <div style="display:flex; gap:10px;">
+            <div>
+            <!-- Aquí están las etiquetas e inputs para ingresar los valores de X y Y deseados -->
+                <label>X deseada (m)</label><br>
+                <input type="number" id="xd" value="0.14" step="0.01">
+            </div>
+            <div>
+                <label>Y deseada (m)</label><br>
+                <input type="number" id="yd" value="0.14" step="0.01">
+            </div>
+        </div>
+
+        <!-- Lso botones para ajustar la posición del robot al punto ingresado y para devolver
+            al robot a la posición incial determinada en el documento -->
+        <button class="move" id="btnMove">Ajustar posición</button>
+        <button class="home" id="btnHome">Posición inicial</button>
+
+        <!-- Título del bloque de parámetros -->
+        <div class="specs" style="font-size: 18px;"><b>PARÁMETROS ACTUALES</b></div>
+
+        <!-- Aquí se muestra la información en tiempo real del TCP y los ángulos actuales -->
+        <div class="info" id="info" style="font-size: 15px;">TCP=(0.140,0.140) q₁=90° q₂=0°</div>
+
+        <!-- Aquí está plasmada la información y limitantes del robot -->
+        <div class="specs"><br>L₁=0.12 m | L₂=0.12 m | Pinza=0.02 m</div>
+        <div class="specs">
+          Radio Máx. de Trabajo: 0.26 m<br>
+          Tiempo Final (tf): 20 s
+        </div>
+
+        <!-- Luego se define el lugar para el plano cartesiano donde se dibuja el robot -->
+        <canvas id="robotCanvas" width="550" height="450"></canvas>
+        </div>
+    </div>
+
+    <!-- Y finalmente, este es el panel de la gráfica de q₂(t) -->
+    <div class="panel" style="width: 400px; height: 420px;">
+        <!-- Y aquí nuevamente se dibuja con ayuda de la Plotly.js -->
+        <div id="grafica_q2" style="width:100%; height:100%;"></div>
+    </div>
+    </div>
+
+  <!-- El contenido del pie de página con mi nombre, materia y docente -->
+<footer>
+    <p>Desarrollado por: 
+        br><strong> JUAN PABLO MORENO CRUZ</strong></p>
+    <p>Materia: <strong>Robótica</strong>
+    </p>
+    <p>Docente: 
+        <br><strong>Dr. JOSE DANIEL CASTRO DIAZ</strong>
+    </p>
+</footer>
+
+<!-- Importo la librería Plotly para generar las gráficas -->
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<script>
+/* Empiezo declaradno las constantes principales del robot */
+const L1=0.12, L2=0.12, c=0.02, L2_TOTAL=L2+c, tf=20, SCALE=600;
+/* L1 y L2 serán las longitudes de los eslabones del robot, c es la herramienta.
+   tf es el tiempo final de trayectoria (20 s) que se pide en el documento 
+   y SCALE ajusta la escala del plano. */
+
+/*  Variables globales */
+let theta1=Math.PI/2, theta2=0, traj=[];  // Ángulos iniciales (para theta 1 será 90°) y trayectoria
+const canvas=document.getElementById('robotCanvas'), ctx=canvas.getContext('2d');
+const origin={x:275,y:300};  // La posición del origen en el canvas
+const xdInput=document.getElementById('xd'), ydInput=document.getElementById('yd'), info=document.getElementById('info');
+
+/* Está función trabaja la cinemática directa */
+function fk(q1,q2){
+  // Calcula la posición del TCP (x,y) a partir de los ángulos q1 y q2
+  return{
+    x:L1*Math.cos(q1)+L2_TOTAL*Math.cos(q1+q2),
+    y:L1*Math.sin(q1)+L2_TOTAL*Math.sin(q1+q2)
+  };
+}
+
+/* Y aquí tenemos a la cinmática inversa*/
+function ik(xd,yd){
+  // Calcula los ángulos (q1, q2) a partir de una posición deseada (xd, yd)
+  const r=Math.hypot(xd,yd); // Distancia al origen
+  const rMax=L1+L2_TOTAL, rMin=Math.abs(L1-L2_TOTAL); // Límites del robot
+
+  if(r<rMin||r>rMax) return null; // Si está fuera del rango, devuelve null
+
+  // Usamos el teorema del coseno para encontrar q2
+  let cosT2=(xd**2+yd**2-L1**2-L2_TOTAL**2)/(2*L1*L2_TOTAL);
+  cosT2=Math.max(-1,Math.min(1,cosT2)); // Aseguramos también que el valor esté entre -1 y 1
+  const t2=Math.acos(cosT2);
+
+  // Para clacular q1 usamos geometría trigonométrica
+  const alpha=Math.atan2(yd,xd);
+  const beta=Math.atan2(L2_TOTAL*Math.sin(t2),L1+L2_TOTAL*Math.cos(t2));
+  return {t1:alpha-beta,t2:t2};
+}
+
+/* Polinomio quíntico para suavizar movimiento */
+function quintic(qi,qf,t,tf){ // qi: ángulo inicial (radianes), qf: ángulo final (radianes)
+                              // t: tiempo actual (segundos, entre 0 y tf) y tf: tiempo final (20 segundos)
+  // Se genera un perfil suave (posición) entre ángulos inicial y final en tf segundos
+  const a0=qi,a1=0,a2=0;
+  const a3=(10*(qf-qi))/tf**3;
+  const a4=(-15*(qf-qi))/tf**4;
+  const a5=(6*(qf-qi))/tf**5;
+  return a0+a1*t+a2*t**2+a3*t**3+a4*t**4+a5*t**5;
+}
+
+/* Para generar una trayectoria y gráficas */
+function generateTrajectory(q1i,q2i,q1f,q2f){
+  // Calcula los puntos intermedios para graficar q1(t) y q2(t)
+  const steps=200,q1Arr=[],q2Arr=[],tArr=[],xy=[];
+  for(let i=0;i<=steps;i++){ // Bucle para genrar los 200 puntos
+    const t=(i/steps)*tf;
+    const q1=quintic(q1i,q1f,t,tf), q2=quintic(q2i,q2f,t,tf);
+    const pos=fk(q1,q2); // Aquí se obtienen coordenadas (x,y) con cinemática directa
+    xy.push(pos); // Se añade una posición cartesiana al array par luego dibujar el caminito del robot
+    q1Arr.push((q1*180/Math.PI).toFixed(2));
+    q2Arr.push((q2*180/Math.PI).toFixed(2));
+    tArr.push(t.toFixed(2));
+  }
+
+  // Aquí unicamente es configuración base para las gráficas, usando Plotly
+  const layoutBase={
+    template:"plotly_dark",
+    paper_bgcolor:"#1a1c1f",
+    plot_bgcolor:"#1a1c1f",
+    font:{color:"#e4e4e4",size:13},
+    margin:{t:50,l:60,r:40,b:40},
+    xaxis:{title:"t [s]",gridcolor:"#444",gridwidth:1.5,zeroline:false},
+    yaxis:{title:"θ [deg]",gridcolor:"#444",gridwidth:1.5,zeroline:false}
+  };
+
+  // diseño de gráfica de q1(t)
+  Plotly.newPlot("grafica_q1",[{
+      x:tArr,y:q1Arr,mode:"lines",name:"q₁(t)",
+      line:{color:"#9ca3af",width:4},
+      hovertemplate:"t=%{x}s<br>q₁=%{y}°<extra></extra>"
+    }],{
+      ...layoutBase,
+      title:{
+        text:"q₁(t)", x:0.02, y:0.98, xanchor:"left", yanchor:"top",
+        font:{size:18,color:"#e4e4e4",family:"Segoe UI, sans-serif"}
+      }
+    },{displayModeBar:true,responsive:true});
+
+  // Disñeo de gráfica de q2(t)
+  Plotly.newPlot("grafica_q2",[{
+      x:tArr,y:q2Arr,mode:"lines",name:"q₂(t)",
+      line:{color:"#6b7280",width:4},
+      hovertemplate:"t=%{x}s<br>q₂=%{y}°<extra></extra>"
+    }],{
+      ...layoutBase,
+      title:{
+        text:"q₂(t)", x:0.02, y:0.98, xanchor:"left", yanchor:"top",
+        font:{size:18,color:"#e4e4e4",family:"Segoe UI, sans-serif"}
+      }
+    },{displayModeBar:true,responsive:true});
+
+  return xy; // Devuelve los puntos de la trayectoria
+}
+
+/*  Movimiento y dibujo del robot  */
+function moveTo(){
+  // Toma las coordenadas deseadas e intenta mover el robot hacia ellas
+    const xd=parseFloat(xdInput.value), yd=parseFloat(ydInput.value);
+    const sol=ik(xd,yd); // Usa la cinemática inversa para cualcular los angulos con las coordenadas deseadas
+    if(!sol){ // Y en caso de no estar dentro del rango, salta el mensaje
+        showModal(`El punto (${xd.toFixed(2)}, ${yd.toFixed(2)}) está fuera del espacio de trabajo.`); 
+        return; 
+    }
+    traj=generateTrajectory(theta1,theta2,sol.t1,sol.t2);
+    theta1=sol.t1; theta2=sol.t2;
+    drawRobot();
+}
+
+function goHome(){
+  // Envía al robot a su posición inicial
+    const sol=ik(0.14,0.14); // De igual forma utilizanod la cinemática inversa
+    if(!sol){ //Y nuevamente en caso de pasar el límite del espacio, saltará el aviso de error
+     showModal("No se puede alcanzar la posición HOME."); 
+     return; 
+    }
+    traj=generateTrajectory(theta1,theta2,sol.t1,sol.t2);
+    theta1=sol.t1; theta2=sol.t2;
+    xdInput.value='0.14'; ydInput.value='0.14';
+    drawRobot();
+}
+
+/* Dibujo del robot y plano cartesiano */
+function drawRobot(q1=theta1,q2=theta2){
+  ctx.clearRect(0,0,canvas.width,canvas.height);// Borra el robot
+
+  // Luego empieza dibujando la cuadrícula
+  const gridStep=0.05*SCALE;
+  ctx.strokeStyle="#333"; ctx.lineWidth=1;
+  for(let x=origin.x%gridStep;x<canvas.width;x+=gridStep){
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke();
+  }
+  for(let y=origin.y%gridStep;y<canvas.height;y+=gridStep){
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke();
+  }
+
+  // Tomando en cuenta los ejes principales
+  ctx.strokeStyle="#fff"; ctx.lineWidth=1.5;
+  ctx.beginPath();
+  ctx.moveTo(0,origin.y); ctx.lineTo(canvas.width,origin.y);
+  ctx.moveTo(origin.x,0); ctx.lineTo(origin.x,canvas.height);
+  ctx.stroke();
+
+  // Hace el claculo de las posiciones del brazo y la herrmienta
+  const elbow={x:L1*Math.cos(q1),y:L1*Math.sin(q1)};
+  const tcp={x:elbow.x+L2_TOTAL*Math.cos(q1+q2),y:elbow.y+L2_TOTAL*Math.sin(q1+q2)};
+  const eC=toCanvas(elbow),tC=toCanvas(tcp);
+
+  // Para después ibuja la trayectoria punteada
+  if(traj.length>0){
+    ctx.setLineDash([5,4]);
+    ctx.beginPath();
+    traj.forEach((p,i)=>{const c=toCanvas(p);if(i===0)ctx.moveTo(c.x,c.y);else ctx.lineTo(c.x,c.y);});
+    ctx.strokeStyle="#f97316"; ctx.lineWidth=2.2; ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Y finalemente dibujar los eslabones y articulaciones
+  const base=toCanvas({x:0,y:0});
+  ctx.lineCap="round"; ctx.lineWidth=8;
+  ctx.strokeStyle="#9ca3af"; ctx.beginPath(); ctx.moveTo(base.x,base.y); ctx.lineTo(eC.x,eC.y); ctx.stroke();
+  ctx.strokeStyle="#6b7280"; ctx.beginPath(); ctx.moveTo(eC.x,eC.y); ctx.lineTo(tC.x,tC.y); ctx.stroke();
+  
+  ctx.fillStyle="#9ca3af"; ctx.beginPath(); ctx.arc(base.x,base.y,8,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(eC.x,eC.y,6,0,Math.PI*2); ctx.fill();
+  
+  ctx.save();
+  ctx.shadowColor = "#ffb74d";
+  ctx.shadowBlur = 20;
+  ctx.fillStyle="#f97316";
+  ctx.beginPath(); ctx.arc(tC.x,tC.y,6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // Y al final de todo, muestra en pantalla los valores actuales de posición y ángulos
+  info.innerText=`TCP=(${tcp.x.toFixed(3)}, ${tcp.y.toFixed(3)})  q₁=${(q1*180/Math.PI).toFixed(1)}°  q₂=${(q2*180/Math.PI).toFixed(1)}°`;
+}
+
+function toCanvas(p){ return{x:origin.x+p.x*SCALE,y:origin.y-p.y*SCALE}; } // Convierte coordenadas a píxeles
+function showModal(msg){ alert(msg); } // Muestra alerta si hay error
+
+/*  Inicialización del simulador  */
+const initialPos=ik(0.14,0.14); // Calcula la posición inicial
+if(initialPos){theta1=initialPos.t1;theta2=initialPos.t2;}
+drawRobot(); // Dibuja el robot
+generateTrajectory(theta1,theta2,theta1,theta2); // Genera gráficas iniciales
+document.getElementById('btnMove').onclick=moveTo; // Asigna función al botón "Ajustar posición"
+document.getElementById('btnHome').onclick=goHome; // Asigna función al botón "Posición inicial"
+
+</script>
+</body>
+</html>
